@@ -1,10 +1,11 @@
-﻿using Functions.ViewModels;
+﻿
+using Functions.ViewModels;
 
 namespace Functions.Services
 {
     public interface IFunctionsDataToJsonSaver
     {
-        public bool SaveToFile(IEnumerable<FunctionPointViewModel> functionPoints);
-        public IEnumerable<FunctionPointViewModel>? GetFunctionsDataFromFile();
+        public bool SaveToFile(IEnumerable<FunctionViewModel> function);
+        public IEnumerable<FunctionViewModel>? GetFunctionsDataFromFile();
     }
 }

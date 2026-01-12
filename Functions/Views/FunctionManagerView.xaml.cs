@@ -2,9 +2,9 @@
 
 namespace Functions.Views;
 
-public partial class FunctionPointsListView : UserControl
+public partial class FunctionManagerView : UserControl
 {
-    public FunctionPointsListView()
+    public FunctionManagerView()
     {
         InitializeComponent();
     }

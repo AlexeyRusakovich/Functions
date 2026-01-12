@@ -9,7 +9,7 @@ namespace Functions.Services
 {
     public class FunctionsDataToJsonSaver : IFunctionsDataToJsonSaver
     {
-        public IEnumerable<FunctionPointViewModel>? GetFunctionsDataFromFile()
+        public IEnumerable<FunctionViewModel>? GetFunctionsDataFromFile()
         {
             var openFileDialog = new OpenFileDialog()
             {
@@ -25,7 +25,7 @@ namespace Functions.Services
                 try
                 {
                     using var dataFileStream = File.OpenRead(filePath);
-                    var deserialized = JsonSerializer.Deserialize<FunctionsPointsJson>(dataFileStream);
+                    var deserialized = JsonSerializer.Deserialize<FunctionDataJson>(dataFileStream);
                     return deserialized?.Data;
                 }
                 catch (Exception ex)
@@ -37,7 +37,7 @@ namespace Functions.Services
             return null;
         }
 
-        public bool SaveToFile(IEnumerable<FunctionPointViewModel> functionPoints)
+        public bool SaveToFile(IEnumerable<FunctionViewModel> functions)
         {
             var saveFileDialog = new SaveFileDialog
             {
@@ -58,9 +58,9 @@ namespace Functions.Services
                 }
 
                 var jsonContent = JsonSerializer.Serialize(
-                    new FunctionsPointsJson
+                    new FunctionDataJson
                     {
-                        Data = functionPoints
+                        Data = functions
                     });
 
                 File.WriteAllText(filePath, jsonContent);

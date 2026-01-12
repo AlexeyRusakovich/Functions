@@ -1,25 +1,28 @@
 ﻿using Caliburn.Micro;
 using Functions.Helpers;
 using Functions.Services;
-using System.Collections.ObjectModel;
 using System.Windows;
 
 namespace Functions.ViewModels;
 
-public class FunctionPointsListViewModel : PropertyChangedBase
+public class FunctionManagerViewModel : PropertyChangedBase, IDisposable
 {
-    public event EventHandler<(bool IsInverted, ObservableCollection<FunctionPointViewModel>)>? FunctionPointsDataChanged;
-    public ObservableCollection<FunctionPointViewModel> FunctionPoints { get; set; } = [];
+    public FunctionViewModel Function { get; private set; } = new();
     public bool IsInvertedFunctionDisplayed { get; set; }
     public bool CanBeInverted { get; set; }
+    public event EventHandler<FunctionViewModel>? FunctionDataChanged;
 
-    private IFunctionsDataToJsonSaver _functionsDataToJsonFileSaver { get; }
+    private readonly IFunctionsDataToJsonSaver _functionsDataToJsonSaver;
 
-    public FunctionPointsListViewModel(IFunctionsDataToJsonSaver functionsDataToJsonFileSaver)
+    public FunctionManagerViewModel(IFunctionsDataToJsonSaver functionsDataToJsonSaver, FunctionViewModel? function = null)
     {
-        _functionsDataToJsonFileSaver = functionsDataToJsonFileSaver;
+        _functionsDataToJsonSaver = functionsDataToJsonSaver;
+        if (function != null)
+        {
+            Function = function;
+        }
 
-        FunctionPoints.CollectionChanged += (o, e) => TriggerFunctionPointsDataChangedEvent();
+        Function.Points.CollectionChanged += (o, e) => TriggerFunctionPointsDataChangedEvent();
     }
 
     public void CreateNewPoint() => AddPoint(new());
@@ -27,28 +30,28 @@ public class FunctionPointsListViewModel : PropertyChangedBase
     public void AddPoint(FunctionPointViewModel point)
     {
         point.PropertyChanged += (o, e) => TriggerFunctionPointsDataChangedEvent();
-        FunctionPoints.Add(point);
+        Function.Points.Add(point);
     }
 
     public void RemovePoint(FunctionPointViewModel pointToRemove)
     {
-        FunctionPoints.Remove(pointToRemove);
+        Function.Points.Remove(pointToRemove);
         pointToRemove.PropertyChanged -= (o, e) => TriggerFunctionPointsDataChangedEvent();
     }
 
     public void RemoveAllPoints()
     {
-        foreach (var functionPoint in FunctionPoints)
+        foreach (var functionPoint in Function.Points)
         {
             functionPoint.PropertyChanged -= (o, e) => TriggerFunctionPointsDataChangedEvent();
         }
 
-        FunctionPoints.Clear();
+        Function.Points.Clear();
     }
 
     public void CopyToClipboard()
     {
-        Clipboard.SetText(string.Join("\r\n", FunctionPoints.Select(point => $"{point.X}\t{point.Y}")));
+        Clipboard.SetText(string.Join("\r\n", Function.Points.Select(point => $"{point.X}\t{point.Y}")));
     }
 
     public void PasteFromClipboard()
@@ -56,7 +59,7 @@ public class FunctionPointsListViewModel : PropertyChangedBase
         if (!Clipboard.ContainsText())
             return;
 
-        foreach (var functionPoint in FunctionPoints)
+        foreach (var functionPoint in Function.Points)
         {
             RemovePoint(functionPoint);
         }
@@ -83,20 +86,15 @@ public class FunctionPointsListViewModel : PropertyChangedBase
         }
     }
 
-    public void SaveToFile()
-    {
-        _functionsDataToJsonFileSaver.SaveToFile(FunctionPoints);
-    }
-
     public void GetFromFile()
     {
-        var points = _functionsDataToJsonFileSaver.GetFunctionsDataFromFile();
-        if (points == null)
+        var function = _functionsDataToJsonSaver.GetFunctionsDataFromFile()?.FirstOrDefault();
+        if (function == null)
             return;
 
-        FunctionPoints.Clear();
+        Function.Points.Clear();
 
-        foreach (var point in points)
+        foreach (var point in function.Points)
         {
             AddPoint(point);
         }
@@ -106,7 +104,13 @@ public class FunctionPointsListViewModel : PropertyChangedBase
 
     private void TriggerFunctionPointsDataChangedEvent()
     {
-        CanBeInverted = FunctionPoints.IsFunctionStrictlyMonotonic();
-        FunctionPointsDataChanged?.Invoke(this, (IsInvertedFunctionDisplayed && CanBeInverted, FunctionPoints));
+        CanBeInverted = Function.Points.IsFunctionStrictlyMonotonic();
+        FunctionDataChanged?.Invoke(this, Function);
+    }
+
+    public void Dispose()
+    {
+        Function.Points.CollectionChanged -= (o, e) => TriggerFunctionPointsDataChangedEvent();
+        RemoveAllPoints();
     }
 }
