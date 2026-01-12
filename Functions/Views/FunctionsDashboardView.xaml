@@ -7,8 +7,10 @@
         xmlns:views="clr-namespace:Functions.Views"
         mc:Ignorable="d"
         Title="Functions"
-        Height="600"
-        Width="900">
+        MinHeight="700"
+        MinWidth="1000"
+        Height="700"
+        Width="1000">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -16,6 +18,6 @@
         </Grid.ColumnDefinitions>
         <views:FunctionPointsListView Grid.Column="0"
                                       DataContext="{Binding FunctionPointsListViewModel}"/>
-        <wpf:WpfPlot Grid.Column="1"/>
+        <ContentControl Grid.Column="1" Content="{Binding PlotControl, Mode=OneTime}"/>
     </Grid>
 </Window>
