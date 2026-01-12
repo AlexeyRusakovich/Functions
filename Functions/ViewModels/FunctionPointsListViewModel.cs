@@ -1,4 +1,6 @@
 ﻿using Caliburn.Micro;
+using Functions.Helpers;
+using Functions.Services;
 using System.Collections.ObjectModel;
 using System.Windows;
 
@@ -6,33 +8,39 @@ namespace Functions.ViewModels;
 
 public class FunctionPointsListViewModel : PropertyChangedBase
 {
+    public event EventHandler<(bool IsInverted, ObservableCollection<FunctionPointViewModel>)>? FunctionPointsDataChanged;
     public ObservableCollection<FunctionPointViewModel> FunctionPoints { get; set; } = [];
-    public event EventHandler<ObservableCollection<FunctionPointViewModel>> FunctionPointsDataChanged;
+    public bool IsInvertedFunctionDisplayed { get; set; }
+    public bool CanBeInverted { get; set; }
 
-    public FunctionPointsListViewModel()
+    private IFunctionsDataToJsonSaver _functionsDataToJsonFileSaver { get; }
+
+    public FunctionPointsListViewModel(IFunctionsDataToJsonSaver functionsDataToJsonFileSaver)
     {
-        FunctionPoints.CollectionChanged += (o, e) => TriggreFunctionPointsDataChangedEvent();
+        _functionsDataToJsonFileSaver = functionsDataToJsonFileSaver;
+
+        FunctionPoints.CollectionChanged += (o, e) => TriggerFunctionPointsDataChangedEvent();
     }
 
     public void CreateNewPoint() => AddPoint(new());
 
     public void AddPoint(FunctionPointViewModel point)
     {
-        point.PropertyChanged += (o, e) => TriggreFunctionPointsDataChangedEvent();
+        point.PropertyChanged += (o, e) => TriggerFunctionPointsDataChangedEvent();
         FunctionPoints.Add(point);
     }
 
     public void RemovePoint(FunctionPointViewModel pointToRemove)
     {
         FunctionPoints.Remove(pointToRemove);
-        pointToRemove.PropertyChanged -= (o, e) => TriggreFunctionPointsDataChangedEvent();
+        pointToRemove.PropertyChanged -= (o, e) => TriggerFunctionPointsDataChangedEvent();
     }
 
     public void RemoveAllPoints()
     {
         foreach (var functionPoint in FunctionPoints)
         {
-            functionPoint.PropertyChanged -= (o, e) => TriggreFunctionPointsDataChangedEvent();
+            functionPoint.PropertyChanged -= (o, e) => TriggerFunctionPointsDataChangedEvent();
         }
 
         FunctionPoints.Clear();
@@ -75,8 +83,30 @@ public class FunctionPointsListViewModel : PropertyChangedBase
         }
     }
 
-    private void TriggreFunctionPointsDataChangedEvent()
+    public void SaveToFile()
     {
-        FunctionPointsDataChanged?.Invoke(this, FunctionPoints);
+        _functionsDataToJsonFileSaver.SaveToFile(FunctionPoints);
+    }
+
+    public void GetFromFile()
+    {
+        var points = _functionsDataToJsonFileSaver.GetFunctionsDataFromFile();
+        if (points == null)
+            return;
+
+        FunctionPoints.Clear();
+
+        foreach (var point in points)
+        {
+            AddPoint(point);
+        }
+    }
+
+    public void OnIsInvertedFunctionDisplayedChanged() => TriggerFunctionPointsDataChangedEvent();
+
+    private void TriggerFunctionPointsDataChangedEvent()
+    {
+        CanBeInverted = FunctionPoints.IsFunctionStrictlyMonotonic();
+        FunctionPointsDataChanged?.Invoke(this, (IsInvertedFunctionDisplayed && CanBeInverted, FunctionPoints));
     }
 }

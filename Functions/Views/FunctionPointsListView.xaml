@@ -4,7 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:local="clr-namespace:Functions.ViewModels"
              mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance local:FunctionPointsListViewModel}"
              xmlns:cm="http://www.caliburnproject.org">
     <Grid Margin="10">
         <i:Interaction.Triggers>
@@ -17,10 +19,68 @@
         </i:Interaction.Triggers>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <UniformGrid Grid.Row="0"
+        <StackPanel Orientation="Horizontal">
+            <Button cm:Message.Attach="CreateNewPoint"
+                    ToolTip="Доабвить новую точку"
+                    HorizontalAlignment="Center"
+                    Margin="10"
+                    Width="25"
+                    Height="25">
+                <Button.Content>
+                    <Rectangle Fill="{StaticResource AddItem}" Width="20" Height="20"/>
+                </Button.Content>
+            </Button>
+            <Button cm:Message.Attach="CopyToClipboard"
+                    ToolTip="Скопировать данные (ctrl + c)"
+                    Margin="10"
+                    Width="25"
+                    Height="25">
+                <Button.Content>
+                    <Rectangle Fill="{StaticResource CopyToClipboard}" Width="20" Height="20"/>
+                </Button.Content>
+            </Button>
+            <Button cm:Message.Attach="PasteFromClipboard"
+                    ToolTip="Вставить данные (ctrl + v)"
+                    Margin="10"
+                     Width="25"
+                    Height="25">
+                <Button.Content>
+                    <Rectangle Fill="{StaticResource PasteFromClipboard}" Width="20" Height="20"/>
+                </Button.Content>
+            </Button>
+            <Button cm:Message.Attach="RemoveAllPoints"
+                    ToolTip="Очистить все точки"
+                    Margin="10"
+                    Width="25"
+                    Height="25">
+                <Button.Content>
+                    <Rectangle Fill="{StaticResource Clear}" Width="20" Height="20"/>
+                </Button.Content>
+            </Button>
+            <Button cm:Message.Attach="SaveToFile"
+                    ToolTip="Сохранить в файл"
+                    Margin="10"
+                    Width="25"
+                    Height="25">
+                <Button.Content>
+                    <Rectangle Fill="{StaticResource GetFromFile}" Width="20" Height="20"/>
+                </Button.Content>
+            </Button>
+            <Button cm:Message.Attach="GetFromFile"
+                    ToolTip="Сохранить в файл"
+                    Margin="10"
+                    Width="25"
+                    Height="25">
+                <Button.Content>
+                    <Rectangle Fill="{StaticResource SaveToFile}" Width="20" Height="20"/>
+                </Button.Content>
+            </Button>
+        </StackPanel>
+        <UniformGrid Grid.Row="1"
                      Margin="5"
                      Height="25">
             <TextBlock Text="Абсолютная отметка [мм]"
@@ -33,7 +93,7 @@
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>
         </UniformGrid>
-        <Border Grid.Row="1"
+        <Border Grid.Row="2"
                 Padding="5"
                 BorderThickness="1"
                 BorderBrush="LightGray">
@@ -78,44 +138,11 @@
                 </ItemsControl>
             </ScrollViewer>
         </Border>
-        <StackPanel Grid.Row="2" Orientation="Horizontal">
-            <Button cm:Message.Attach="CreateNewPoint"
-                    ToolTip="Доабвить новую точку"
-                    HorizontalAlignment="Center"
+        <CheckBox Grid.Row="3"
+                    Content="Инвертировать функцию"
                     Margin="10"
-                    Width="35"
-                    Height="35">
-                <Button.Content>
-                    <Rectangle Fill="{StaticResource AddItem}" Width="20" Height="20"/>
-                </Button.Content>
-            </Button>
-            <Button cm:Message.Attach="CopyToClipboard"
-                    ToolTip="Скопировать данные (ctrl + c)"
-                    Height="35"
-                    Margin="10"
-                    Width="35">
-                <Button.Content>
-                    <Rectangle Fill="{StaticResource CopyToClipboard}" Width="20" Height="20"/>
-                </Button.Content>
-            </Button>
-            <Button cm:Message.Attach="PasteFromClipboard"
-                    ToolTip="Вставить данные (ctrl + v)"
-                    Margin="10"
-                    Height="35" 
-                    Width="35">
-                <Button.Content>
-                    <Rectangle Fill="{StaticResource PasteFromClipboard}" Width="20" Height="20"/>
-                </Button.Content>
-            </Button>
-            <Button cm:Message.Attach="RemoveAllPoints"
-                    ToolTip="Очистить все точки"
-                    Margin="10"
-                    Height="35" 
-                    Width="35">
-                <Button.Content>
-                    <Rectangle Fill="{StaticResource Clear}" Width="20" Height="20"/>
-                </Button.Content>
-            </Button>
-        </StackPanel>
+                    Height="20"
+                    IsChecked="{Binding IsInvertedFunctionDisplayed}"
+                    IsEnabled="{Binding CanBeInverted}" />
     </Grid>
 </UserControl>

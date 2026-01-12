@@ -39,4 +39,29 @@
             </DrawingGroup>
         </DrawingBrush.Drawing>
     </DrawingBrush>
+
+    <DrawingBrush x:Key="SaveToFile">
+        <DrawingBrush.Drawing>
+            <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                <GeometryDrawing Geometry="F1 M24,24z M0,0z M12,11L12,17 M12,17L10,15 M12,17L14,15 M13,3L8.2,3C7.0799,3 6.51984,3 6.09202,3.21799 5.71569,3.40973 5.40973,3.71569 5.21799,4.09202 5,4.51984 5,5.0799 5,6.2L5,17.8C5,18.9201 5,19.4802 5.21799,19.908 5.40973,20.2843 5.71569,20.5903 6.09202,20.782 6.51984,21 7.0799,21 8.2,21L15.8,21C16.9201,21 17.4802,21 17.908,20.782 18.2843,20.5903 18.5903,20.2843 18.782,19.908 19,19.4802 19,18.9201 19,17.8L19,9 M13,3L19,9 M13,3L13,7.4C13,7.96005 13,8.24008 13.109,8.45399 13.2049,8.64215 13.3578,8.79513 13.546,8.89101 13.7599,9 14.0399,9 14.6,9L19,9">
+                    <GeometryDrawing.Pen>
+                        <Pen Brush="#FF000000" Thickness="2" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" MiterLimit="1" />
+                    </GeometryDrawing.Pen>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+
+    <DrawingBrush x:Key="GetFromFile">
+        <DrawingBrush.Drawing>
+            <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                <GeometryDrawing Geometry="F1 M24,24z M0,0z M19.002,21L19.002,15 M21.0303,17L19.0303,15 17.0303,17 M13,3L8.2,3C7.0799,3 6.51984,3 6.09202,3.21799 5.71569,3.40973 5.40973,3.71569 5.21799,4.09202 5,4.51984 5,5.0799 5,6.2L5,17.8C5,18.9201 5,19.4802 5.21799,19.908 5.40973,20.2843 5.71569,20.5903 6.09202,20.782 6.51984,21 7.0799,21 8.2,21L15,21 M13,3L19,9 M13,3L13,7.4C13,7.96005 13,8.24008 13.109,8.45399 13.2049,8.64215 13.3578,8.79513 13.546,8.89101 13.7599,9 14.0399,9 14.6,9L19,9 M19,9L19,11">
+                    <GeometryDrawing.Pen>
+                        <Pen Brush="#FF000000" Thickness="2" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" MiterLimit="1" />
+                    </GeometryDrawing.Pen>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+
 </ResourceDictionary>

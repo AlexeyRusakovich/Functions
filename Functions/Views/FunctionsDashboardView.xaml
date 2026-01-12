@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:wpf="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
         xmlns:views="clr-namespace:Functions.Views"
+        xmlns:cm="http://www.caliburnproject.org"
         mc:Ignorable="d"
         Title="Functions"
         MinHeight="700"
