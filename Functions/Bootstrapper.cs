@@ -36,6 +36,7 @@ public class Bootstrapper : BootstrapperBase
         builder.RegisterType<FunctionsDashboardViewModel>().AsSelf().SingleInstance();
 
         builder.RegisterType<FunctionsDataToJsonSaver>().AsImplementedInterfaces();
+        builder.RegisterType<FunctionsDataTopClipboardSaver>().AsImplementedInterfaces();
 
         _container = builder.Build();
     }

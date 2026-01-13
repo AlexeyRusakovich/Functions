@@ -1,4 +1,5 @@
 ﻿using Caliburn.Micro;
+using Functions.Helpers;
 using Functions.Interfaces;
 using Functions.Services;
 using ScottPlot;
@@ -9,115 +10,185 @@ namespace Functions.ViewModels;
 
 public class FunctionsDashboardViewModel : Screen, IHasChanges
 {
-    public ObservableCollection<FunctionManagerViewModel> FunctionsManagers { get; private set; } = [];
-    public FunctionManagerViewModel? SelectedFunctionManager { get; set; }
+    public ObservableCollection<FunctionTableViewModel> FunctionsTables { get; private set; } = [];
+    public ObservableCollection<FunctionTableViewModel> SelectedFunctionTables { get; private set; } = [];
     public WpfPlot PlotControl { get; private set; } = new WpfPlot();
     public bool HasChanges { get; private set; }
 
-    private IFunctionsDataToJsonSaver _functionsDataToJsonSaver;
+    private Dictionary<Guid, Color> _functionColorsDictionary = [];
+    private readonly IFunctionsDataToJsonSaver _functionsDataToJsonSaver;
+    private readonly IFunctionsDataToClipboardSaver _functionsDataToClipboardSaver;
 
-    public FunctionsDashboardViewModel(IFunctionsDataToJsonSaver functionsDataToJsonSaver)
+    public FunctionsDashboardViewModel(
+        IFunctionsDataToJsonSaver functionsDataToJsonSaver,
+        IFunctionsDataToClipboardSaver functionsDataToClipboardSaver)
     {
         _functionsDataToJsonSaver = functionsDataToJsonSaver;
+        _functionsDataToClipboardSaver = functionsDataToClipboardSaver;
 
         CreateNewFunction();
-
-        var plot = PlotControl.Plot;
-        plot.XLabel("Абсолютная отметка [мм]");
-        plot.YLabel("Температура [°C]");
+        SetPlotLabels();
     }
 
     public void AddNewItem()
     {
-        if (SelectedFunctionManager == null)
+        if (!SelectedFunctionTables.Any())
         {
             CreateNewFunction();
         }
         else
         {
-            SelectedFunctionManager.CreateNewPoint();
+            foreach (var selectedFunctionTable in SelectedFunctionTables)
+            {
+                selectedFunctionTable.CreateNewPoint();
+            }
         }
     }
 
-    public void CreateNewFunction()
+    public void CopyToClipboard()
     {
-        AddNewFunction(new FunctionViewModel());
+        if (!SelectedFunctionTables.Any())
+        {
+            _functionsDataToClipboardSaver.CopyToClipboard(FunctionsTables.Select(x => x.Function));
+        }
+        else
+        {
+            _functionsDataToClipboardSaver.CopyToClipboard(SelectedFunctionTables.Select(x => x.Function));
+        }
     }
 
-    public void AddNewFunction(FunctionViewModel function)
+    public void PasteFromClipboard()
     {
-        var newFunction = new FunctionManagerViewModel(_functionsDataToJsonSaver, function);
-        newFunction.FunctionDataChanged += OnFunctionPointsDataChanged;
-        FunctionsManagers.Add(newFunction);
+        var functions = _functionsDataToClipboardSaver.GetFunctionsFromClipboard();
+        if (functions == null)
+            return;
+
+        foreach (var function in functions)
+        {
+            AddNewFunction(function);
+        }
+
+        OnFunctionPointsDataChanged(null, null!);
     }
 
-    public void RemoveFunction(FunctionManagerViewModel functionManager)
+    public void RemoveItems()
     {
-        FunctionsManagers.Remove(functionManager);
-        functionManager.Dispose();
+        if (!SelectedFunctionTables.Any())
+        {
+            var items = FunctionsTables.ToArray();
+            foreach (var functionTable in items)
+            {
+                functionTable.Dispose();
+            }
+
+            FunctionsTables.Clear();
+        }
+        else
+        {
+            var items = SelectedFunctionTables.ToArray();
+            foreach (var functionTable in items)
+            {
+                FunctionsTables.Remove(functionTable);
+                functionTable?.Dispose();
+            }
+
+            SelectedFunctionTables.Clear();
+        }
     }
 
-    public void ResetSelectedFunctionManager()
+    public void OnFunctionTablesSelectionChanged(FunctionTableViewModel functionTable, bool isSelected)
     {
-        SelectedFunctionManager = null;
+        if (isSelected)
+        {
+            SelectedFunctionTables.Add(functionTable);
+        }
+        else
+        {
+            SelectedFunctionTables.Remove(functionTable);
+        }
+    }
+
+    public void UnselectFunctionTable(FunctionTableViewModel functionTable)
+    {
+        functionTable.IsSelected = false;
+        SelectedFunctionTables.Remove(functionTable);
     }
 
     public void SaveToFile()
     {
-        if (SelectedFunctionManager == null)
+        if (!SelectedFunctionTables.Any())
         {
-            _functionsDataToJsonSaver.SaveToFile(FunctionsManagers.Select(x => x.Function));
+            _functionsDataToJsonSaver.SaveToFile(FunctionsTables.Select(x => x.Function));
         }
         else
         {
-            _functionsDataToJsonSaver.SaveToFile([SelectedFunctionManager!.Function]);
+            _functionsDataToJsonSaver.SaveToFile(SelectedFunctionTables.Select(x => x.Function));
         }
     }
 
     public void GetFromFile()
     {
-        if (SelectedFunctionManager == null)
+        var functions = _functionsDataToJsonSaver.GetFunctionsDataFromFile();
+        if (functions != null)
         {
-            var functions = _functionsDataToJsonSaver.GetFunctionsDataFromFile();
-            if (functions != null)
-            {
-                foreach (var function in functions)
-                {
-                    AddNewFunction(function);
-                }
-            }
-        }
-        else
-        {
-            var function = _functionsDataToJsonSaver.GetFunctionsDataFromFile()?.FirstOrDefault();
-            if (function != null)
+            foreach (var function in functions)
             {
                 AddNewFunction(function);
             }
         }
+
+        OnFunctionPointsDataChanged(null, null!);
+    }
+
+    private void CreateNewFunction()
+    {
+        AddNewFunction(new FunctionViewModel());
+    }
+
+    private void AddNewFunction(FunctionViewModel function)
+    {
+        var newFunction = new FunctionTableViewModel(function);
+        newFunction.FunctionDataChanged += OnFunctionPointsDataChanged;
+        FunctionsTables.Add(newFunction);
+        OnFunctionPointsDataChanged(null, null!);
     }
 
     private void OnFunctionPointsDataChanged(object? sender, FunctionViewModel e)
     {
         PlotControl.Plot.Clear();
 
-        foreach (var functionManager in FunctionsManagers)
+        foreach (var functionTable in FunctionsTables)
         {
-            var xs = e.Points.Select(point => point.X).ToArray();
-            var ys = e.Points.Select(point => point.Y).ToArray();
+            var function = functionTable.Function;
 
-            AddScatterLine(xs, ys, functionManager.Function.Name);
+            var xs = function.Points.Select(point => point.X).ToArray();
+            var ys = function.Points.Select(point => point.Y).ToArray();
+
+            AddScatterLine(xs, ys, function.Name, function.Id, function.IsInverted);
         }
 
         PlotControl.Refresh();
         HasChanges = true;
     }
 
-    private void AddScatterLine(double[] xs, double[] ys, string name, bool isInverted = false)
+    private void SetPlotLabels()
+    {
+        var plot = PlotControl.Plot;
+        plot.XLabel("Абсолютная отметка [мм]");
+        plot.YLabel("Температура [°C]");
+    }
+
+    private void AddScatterLine(double[] xs, double[] ys, string name, Guid id, bool isInverted = false)
     {
         var plot = PlotControl.Plot;
 
-        var scatterLine = plot.Add.ScatterLine(xs, ys, Color.RandomHue());
+        if (!_functionColorsDictionary.TryGetValue(id, out var color))
+        {
+            color = ColorHelper.GetRandomColor();
+            _functionColorsDictionary.Add(id, color);
+        }
+
+        var scatterLine = plot.Add.ScatterLine(xs, ys, color);
         scatterLine.MarkerShape = MarkerShape.FilledCircle;
         scatterLine.MarkerSize = 5;
         scatterLine.LegendText = name;
@@ -126,6 +197,8 @@ public class FunctionsDashboardViewModel : Screen, IHasChanges
         {
             var invertedScatterLine = plot.Add.ScatterLine(ys, xs, scatterLine.Color);
             invertedScatterLine.LineStyle = new LineStyle(1, scatterLine.Color, LinePattern.Dotted);
+            invertedScatterLine.MarkerShape = MarkerShape.OpenCircle;
+            invertedScatterLine.MarkerSize = 5;
             invertedScatterLine.LegendText = $"Обратная функция: {name}";
         }
     }

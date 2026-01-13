@@ -1,5 +1,4 @@
-﻿
-using Functions.ViewModels;
+﻿using Functions.ViewModels;
 
 namespace Functions.Services
 {

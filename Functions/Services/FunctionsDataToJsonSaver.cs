@@ -5,70 +5,69 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 
-namespace Functions.Services
+namespace Functions.Services;
+
+public class FunctionsDataToJsonSaver : IFunctionsDataToJsonSaver
 {
-    public class FunctionsDataToJsonSaver : IFunctionsDataToJsonSaver
+    public IEnumerable<FunctionViewModel>? GetFunctionsDataFromFile()
     {
-        public IEnumerable<FunctionViewModel>? GetFunctionsDataFromFile()
+        var openFileDialog = new OpenFileDialog()
         {
-            var openFileDialog = new OpenFileDialog()
-            {
-                Filter = "JSON files (*.json)|*.json",
-                FilterIndex = 1,
-                Title = "Select JSON File"
-            };
+            Filter = "JSON files (*.json)|*.json",
+            FilterIndex = 1,
+            Title = "Select JSON File"
+        };
 
-            if (openFileDialog.ShowDialog() == true)
-            {
-                string filePath = openFileDialog.FileName;
+        if (openFileDialog.ShowDialog() == true)
+        {
+            string filePath = openFileDialog.FileName;
 
-                try
-                {
-                    using var dataFileStream = File.OpenRead(filePath);
-                    var deserialized = JsonSerializer.Deserialize<FunctionDataJson>(dataFileStream);
-                    return deserialized?.Data;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error reading file: {ex.Message}", "Error");
-                }
+            try
+            {
+                using var dataFileStream = File.OpenRead(filePath);
+                var deserialized = JsonSerializer.Deserialize<FunctionDataJson>(dataFileStream);
+                return deserialized?.Data;
             }
-
-            return null;
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error reading file: {ex.Message}", "Error");
+            }
         }
 
-        public bool SaveToFile(IEnumerable<FunctionViewModel> functions)
+        return null;
+    }
+
+    public bool SaveToFile(IEnumerable<FunctionViewModel> functions)
+    {
+        var saveFileDialog = new SaveFileDialog
         {
-            var saveFileDialog = new SaveFileDialog
+            Filter = "JSON files (*.json)|*.json",
+            FilterIndex = 1,
+            Title = "Create JSON File",
+            FileName = "data.json",
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+        };
+
+        if (saveFileDialog.ShowDialog() == true)
+        {
+            string filePath = saveFileDialog.FileName;
+
+            if (!Path.GetExtension(filePath).Equals(".json", StringComparison.OrdinalIgnoreCase))
             {
-                Filter = "JSON files (*.json)|*.json",
-                FilterIndex = 1,
-                Title = "Create JSON File",
-                FileName = "data.json",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-            };
-
-            if (saveFileDialog.ShowDialog() == true)
-            {
-                string filePath = saveFileDialog.FileName;
-
-                if (!Path.GetExtension(filePath).Equals(".json", StringComparison.OrdinalIgnoreCase))
-                {
-                    filePath = Path.ChangeExtension(filePath, ".json");
-                }
-
-                var jsonContent = JsonSerializer.Serialize(
-                    new FunctionDataJson
-                    {
-                        Data = functions
-                    });
-
-                File.WriteAllText(filePath, jsonContent);
-
-                return true;
+                filePath = Path.ChangeExtension(filePath, ".json");
             }
 
-            return false;
+            var jsonContent = JsonSerializer.Serialize(
+                new FunctionDataJson
+                {
+                    Data = functions
+                });
+
+            File.WriteAllText(filePath, jsonContent);
+
+            return true;
         }
+
+        return false;
     }
 }

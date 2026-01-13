@@ -6,7 +6,7 @@ public static class FunctionHelper
 {
     public static bool IsFunctionStrictlyMonotonic(this IEnumerable<FunctionPointViewModel> functionPoints)
     {
-        if (functionPoints.Count() <= 1)
+        if (functionPoints.DistinctBy(x => (x.X,x.Y)).Count() <= 1)
             return false;
 
         var xArr = functionPoints.Select(x => x.X).ToArray();

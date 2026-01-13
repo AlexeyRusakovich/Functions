@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:wpf="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:views="clr-namespace:Functions.Views"
         xmlns:vms="clr-namespace:Functions.ViewModels"
         xmlns:cm="http://www.caliburnproject.org"
@@ -11,16 +12,26 @@
         mc:Ignorable="d"
         Title="Functions"
         MinHeight="700"
-        MinWidth="1000">
+        MinWidth="1200">
+    
     <Grid>
+        <i:Interaction.Triggers>
+            <i:KeyTrigger Modifiers="Control" Key="C">
+                <cm:ActionMessage MethodName="CopyToClipboard" />
+            </i:KeyTrigger>
+            <i:KeyTrigger Modifiers="Control" Key="V">
+                <cm:ActionMessage MethodName="PasteFromClipboard" />
+            </i:KeyTrigger>
+        </i:Interaction.Triggers>
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="400"/>
+            <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
         <DockPanel Grid.Column="0">
             <StackPanel DockPanel.Dock="Top"
                         Orientation="Horizontal">
-                <Button cm:Message.Attach="CreateNewFunction"
+                <Button cm:Message.Attach="AddNewItem"
                         ToolTip="Доабвить новую точку"
                         HorizontalAlignment="Center"
                         Background="White"
@@ -51,7 +62,7 @@
                         <Rectangle Fill="{StaticResource PasteFromClipboard}" Width="20" Height="20"/>
                     </Button.Content>
                 </Button>
-                <Button cm:Message.Attach="RemoveAllPoints"
+                <Button cm:Message.Attach="RemoveItems"
                         ToolTip="Очистить все точки"
                         Margin="10"
                         Background="White"
@@ -83,53 +94,111 @@
                 </Button>
             </StackPanel>
             <StackPanel DockPanel.Dock="Top"
-                        Orientation="Horizontal"
-                        d:Visibility="Visible">
-                <StackPanel.Style>
-                    <Style TargetType="StackPanel">
+                        Orientation="Vertical"
+                        d:Visibility="Visible"
+                        Margin="0,0,0,10">
+                <TextBlock Text="Список функций: "
+                           VerticalAlignment="Center"
+                           Margin="10,0,0,0"
+                           FontSize="16"/>
+                <ItemsControl ItemsSource="{Binding SelectedFunctionTables}"
+                              Margin="10">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.Style>
+                            <Style TargetType="ItemsControl">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedFunctionTables.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ItemsControl.Style>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                                    <TextBlock Text="{Binding Function.Name}"/>
+                                    <Button Margin="5,0,0,0"
+                                            cm:Message.Attach="UnselectFunctionTable($dataContext)"
+                                            cm:Action.TargetWithoutContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ItemsControl}}">
+                                        <Button.Content>
+                                            <Path Data="M0,0 L1,1 M0,1 L1,0" 
+                                                  Stroke="Black"
+                                                  StrokeThickness="1"
+                                                  Stretch="Uniform"
+                                                  Width="7" Height="7"/>
+                                        </Button.Content>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+            </StackPanel>
+            <ListBox ItemsSource="{Binding FunctionsTables}"
+                     ScrollViewer.CanContentScroll="False">
+                <ListBox.Resources>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border Background="{TemplateBinding Background}">
+                                        <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding SelectedFunctionManager}" Value="{x:Null}">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                            </DataTrigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="Transparent"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="Transparent"/>
+                            </Trigger>
                         </Style.Triggers>
                     </Style>
-                </StackPanel.Style>
-                <TextBlock FontSize="14"
-                           Margin="10">
-                    <Run Text="Выбранная функция: "/>
-                    <Run Text="{Binding SelectedFunctionManager.Function.Name}"/>
-                </TextBlock>
-                <Button Background="White"
-                        Width="10"
-                        Height="10"
-                        cm:Message.Attach="ResetSelectedFunctionManager">
-                    <Button.Content>
-                        <Path Data="M0,0 L1,1 M0,1 L1,0" 
-                              Stroke="Black"
-                              StrokeThickness="1"
-                              Stretch="Uniform"
-                              Width="5"
-                              Height="5"/>
-                    </Button.Content>
-                </Button>
-            </StackPanel>
-            <TreeView ItemsSource="{Binding FunctionsManagers}"
-                      SelectedValuePath="{Binding SelectedFunctionManager}">
-                <TreeView.ItemTemplate>
+                </ListBox.Resources>
+                <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <TreeViewItem IsExpanded="True"
-                                      Header="{Binding Function}">
-                            <TreeViewItem.HeaderTemplate>
+                        <Expander IsExpanded="True">
+                            <Expander.HeaderTemplate>
                                 <DataTemplate>
-                                    <TextBox Text="{Binding Name}" Width="150"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBox Text="{Binding DataContext.Function.Name,
+                                                                RelativeSource={RelativeSource AncestorType=ListBoxItem},
+                                                                UpdateSourceTrigger=PropertyChanged}"
+                                                 Width="100"
+                                                 FontSize="14"/>
+                                        <CheckBox VerticalAlignment="Center"
+                                                  IsChecked="{Binding DataContext.IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                                                  Margin="10,0,0,0">
+                                            <i:Interaction.Triggers>
+                                                <i:EventTrigger EventName="Checked">
+                                                    <cm:ActionMessage MethodName="OnFunctionTablesSelectionChanged">
+                                                        <cm:Parameter Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                                                        <cm:Parameter Value="True" />
+                                                    </cm:ActionMessage>
+                                                </i:EventTrigger>
+                                                <i:EventTrigger EventName="Unchecked">
+                                                    <cm:ActionMessage MethodName="OnFunctionTablesSelectionChanged">
+                                                        <cm:Parameter Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                                                        <cm:Parameter Value="False" />
+                                                    </cm:ActionMessage>
+                                                </i:EventTrigger>
+                                            </i:Interaction.Triggers>
+                                        </CheckBox>
+                                    </StackPanel>
                                 </DataTemplate>
-                            </TreeViewItem.HeaderTemplate>
-                            <views:FunctionManagerView DataContext="{Binding}"/>
-                        </TreeViewItem>
+                            </Expander.HeaderTemplate>
+                            <views:FunctionTableView DataContext="{Binding}"/>
+                        </Expander>
                     </DataTemplate>
-                </TreeView.ItemTemplate>
-            </TreeView>
+                </ListBox.ItemTemplate>
+            </ListBox>
         </DockPanel>
-        <ContentControl Grid.Column="1" Content="{Binding PlotControl, Mode=OneTime}"/>
+        <GridSplitter Grid.Column="1" Width="1" Background="LightGray"/>
+        <ContentControl Grid.Column="2" Content="{Binding PlotControl, Mode=OneTime}"/>
     </Grid>
 </Window>
