@@ -124,6 +124,8 @@ public class FunctionsDashboardViewModel : Screen, IHasChanges
         {
             _functionsDataToJsonSaver.SaveToFile(SelectedFunctionTables.Select(x => x.Function));
         }
+
+        HasChanges = false;
     }
 
     public void GetFromFile()

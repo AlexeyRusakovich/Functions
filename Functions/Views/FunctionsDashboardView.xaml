@@ -32,7 +32,7 @@
             <StackPanel DockPanel.Dock="Top"
                         Orientation="Horizontal">
                 <Button cm:Message.Attach="AddNewItem"
-                        ToolTip="Доабвить новую точку"
+                        ToolTip="Доабвить новый элемент"
                         HorizontalAlignment="Center"
                         Background="White"
                         Margin="10"
@@ -63,7 +63,7 @@
                     </Button.Content>
                 </Button>
                 <Button cm:Message.Attach="RemoveItems"
-                        ToolTip="Очистить все точки"
+                        ToolTip="Очистить элементы"
                         Margin="10"
                         Background="White"
                         Width="25"
@@ -73,7 +73,7 @@
                     </Button.Content>
                 </Button>
                 <Button cm:Message.Attach="SaveToFile"
-                        ToolTip="Сохранить в файл"
+                        ToolTip="Экспорт в файл"
                         Background="White"
                         Margin="10"
                         Width="25"
@@ -83,7 +83,7 @@
                     </Button.Content>
                 </Button>
                 <Button cm:Message.Attach="GetFromFile"
-                        ToolTip="Сохранить в файл"
+                        ToolTip="Импорт из файла"
                         Margin="10"
                         Background="White"
                         Width="25"
